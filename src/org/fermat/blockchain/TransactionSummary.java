@@ -1,8 +1,8 @@
 package org.fermat.blockchain;
 
 import com.google.common.base.Preconditions;
-import org.fermatj.core.Transaction;
-import org.fermatj.core.TransactionOutput;
+import org.blockchainj.core.Transaction;
+import org.blockchainj.core.TransactionOutput;
 import org.spongycastle.util.encoders.Hex;
 
 import java.io.UnsupportedEncodingException;

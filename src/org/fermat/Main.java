@@ -3,12 +3,15 @@ package org.fermat;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import org.apache.commons.cli.*;
+import org.blockchainj.params.IoP.IoP_MainNetParams;
+import org.blockchainj.params.IoP.IoP_RegTestParams;
+import org.blockchainj.params.IoP.IoP_TestNet3Params;
 import org.fermat.blockchain.MinerWhiteListTransaction;
 import org.fermat.blockchain.TransactionSummary;
-import org.fermatj.core.*;
-import org.fermatj.params.MainNetParams;
-import org.fermatj.params.RegTestParams;
-import org.fermatj.params.TestNet3Params;
+import org.blockchainj.core.*;
+import org.blockchainj.params.MainNetParams;
+import org.blockchainj.params.RegTestParams;
+import org.blockchainj.params.TestNet3Params;
 
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -23,6 +26,7 @@ public class Main {
     private static MinerWhiteListTransaction.Action action;
     private static String masterPrivKey;
     private static String minerPublicKey;
+    private static String values;
     public static NetworkParameters networkParameters;
     public static Logger logger = (Logger)LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
 
@@ -30,6 +34,8 @@ public class Main {
     public static void main(String[] args)  {
         // create Options object
         options = addCommandLineOptions();
+
+
 
         // create the parser
         CommandLineParser parser = new DefaultParser();
@@ -77,23 +83,16 @@ public class Main {
 
         }
 
-        // make sure the public key is valid
-        if (!isMinerPublicKeyValid(minerPublicKey)){
-            // oops, something went wrong
-            System.err.println("Miner's public key is not valid on network " + networkParameters.getPaymentProtocolId() + ".");
-            System.exit(-1);
-
-        }
 
         try{
             /**
              * generates the transaction
              */
-            MinerWhiteListTransaction generator = new MinerWhiteListTransaction(masterPrivKey, action, minerPublicKey);
+            MinerWhiteListTransaction generator = new MinerWhiteListTransaction(masterPrivKey, action, values,  minerPublicKey);
             Transaction transaction = generator.build();
 
             // shows the summary and waits for confirmation
-            showSummary(transaction);
+            //showSummary(transaction);
 
             waitForEnter();
             generator.broadcast();
@@ -158,8 +157,8 @@ public class Main {
 
     private static void defineArguments(CommandLine commandLineline) {
         // make sure required parameters have data.
-        if (!commandLineline.hasOption("p") || !commandLineline.hasOption("P") || !commandLineline.hasOption("a")){
-            String output = "Required parameter missing.\n Private Key [p], Public Key [P] and Action [a] are required parameters.";
+        if (!commandLineline.hasOption("P") || !commandLineline.hasOption("a") || !commandLineline.hasOption("v")){
+            String output = "Required parameter missing.\n Private Key [P], Action [a] and Values [v] are required parameters.";
             throw new RuntimeException(output);
         }
         //master private key
@@ -169,38 +168,43 @@ public class Main {
         
         // action
         switch (commandLineline.getOptionValue("a").toLowerCase()){
-            case "add":
-                action = MinerWhiteListTransaction.Action.ADD;
+            case "new":
+                action = MinerWhiteListTransaction.Action.NEW;
                 break;
-            case "rem":
-                action = MinerWhiteListTransaction.Action.REM;
+            case "votyes":
+                action = MinerWhiteListTransaction.Action.VOTYES;
+                break;
+            case "votno":
+                action = MinerWhiteListTransaction.Action.VOTNO;
                 break;
             default:
                 throw new InvalidParameterException(commandLineline.getOptionValue("a") + " is not a valid action parameter.");
         }
 
+        NetworkParametersGetter.setSupportedBlockchain(SupportedBlockchain.INTERNET_OF_PEOPLE);
         // define the network, if any. RegTest by default.
         if (commandLineline.hasOption("n")) {
             switch (commandLineline.getOptionValue("n").toUpperCase()){
                 case "MAIN":
-                    networkParameters = MainNetParams.get();
+                    networkParameters = IoP_MainNetParams.get();
                     break;
                 case "TEST":
-                    networkParameters = TestNet3Params.get();
+                    networkParameters = IoP_TestNet3Params.get();
                     break;
                 case "REGTEST":
-                    networkParameters = RegTestParams.get();
+                    networkParameters = IoP_RegTestParams.get();
                     break;
                 default:
                     throw new InvalidParameterException(commandLineline.getOptionValue("n") + " is not a valid parameter for Network.");
             }
         } else
-            networkParameters = MainNetParams.get();
+            networkParameters = IoP_RegTestParams.get();
 
+        values = commandLineline.getOptionValue("v");
     }
 
     private static void showVersion(){
-        System.out.println("IoP-Blockchain-Tool version 1.0");
+        System.out.println("IoP-CC-Tool version 1.0");
     }
 
     /**
@@ -211,19 +215,20 @@ public class Main {
         Options options = new Options();
 
         // add Action option
-        Option action = new Option("a", "action", true, "ADD or REM a public key to the blockchain");
+        Option action = new Option("a", "action", true, "NEW, VOTYES or VOTNO.");
         action.setOptionalArg(false);
         options.addOption(action);
+
+        // add Action option
+        Option values = new Option("v", "values", true, "List of benefiaries or CC transaction hash");
+        values.setOptionalArg(false);
+        options.addOption(values);
+
 
         // add private key option
         Option privateKey = new Option("P", "Private", true, "Master private key");
         privateKey.setOptionalArg(false);
         options.addOption(privateKey);
-
-        // add public key option
-        Option publicKey = new Option("p", "public", true, "Miner's public key");
-        publicKey.setOptionalArg(false);
-        options.addOption(publicKey);
 
         // add network option
         Option network = new Option("n", "network", true, "MAIN, TEST, REGTEST networks. Default is MAIN");

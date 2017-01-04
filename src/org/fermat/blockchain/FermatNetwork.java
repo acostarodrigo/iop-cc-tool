@@ -6,14 +6,16 @@ import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import org.blockchainj.params.IoP.IoP_RegTestParams;
+import org.blockchainj.wallet.Wallet;
 import org.fermat.Main;
-import org.fermatj.core.*;
-import org.fermatj.net.discovery.DnsDiscovery;
-import org.fermatj.params.RegTestParams;
-import org.fermatj.store.BlockStore;
-import org.fermatj.store.BlockStoreException;
-import org.fermatj.store.MemoryBlockStore;
-import org.fermatj.wallet.WalletTransaction;
+import org.blockchainj.core.*;
+import org.blockchainj.net.discovery.DnsDiscovery;
+import org.blockchainj.params.RegTestParams;
+import org.blockchainj.store.BlockStore;
+import org.blockchainj.store.BlockStoreException;
+import org.blockchainj.store.MemoryBlockStore;
+import org.blockchainj.wallet.WalletTransaction;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
@@ -79,12 +81,13 @@ public class FermatNetwork {
 
         peerGroup = new PeerGroup(CONTEXT, blockChain);
         peerGroup.addWallet(wallet);
-        peerGroup.addEventListener(events);
+
 
         // if this is reg test, we are connecting to local and only wait one confirmation
-        if (NETWORK == RegTestParams.get())
+        if (NETWORK == IoP_RegTestParams.get())
         {
             peerGroup.setUseLocalhostPeerWhenPossible(true);
+            peerGroup.addAddress(new PeerAddress(new InetSocketAddress("127.0.0.1", 7685)));
             minBroadcastConnections = 1;
         } else {
             peerGroup.addPeerDiscovery(new DnsDiscovery(NETWORK));
