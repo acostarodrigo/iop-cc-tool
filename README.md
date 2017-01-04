@@ -1,6 +1,6 @@
-# IoP-Blockchain-Tool
+# IoP-CC-Tool
 
-Adds and removes  public keys into the blockchain for the miner white list control.
+Creates a new Contribution Contract and allows voting YES or NO for any contract.
 
 ### Usage
 
@@ -11,14 +11,14 @@ $ java -jar iop-blockchain-tool/out/artifacts/iop_blockchain_tool_jar/iop-blockc
 
 
 ```
-usage: IoP-Blockchain-Tool [-a <arg>] [-d] [-h] [-n <arg>] [-P <arg>] [-p
+usage: IoP-CC-Tool [-a <arg>] [-d] [-h] [-n <arg>] [-P <arg>] [-p
        <arg>] [-v]
- -a,--action <arg>    ADD or REM a public key to the blockchain
+ -a,--action <arg>    NEW, VOTYES or VOTNO 
  -d,--debug           Print debugging information. Disabled by default.
  -h,--help            Print this message
  -n,--network <arg>   MAIN, TEST, REGTEST networks. Default is MAIN
  -P,--Private <arg>   Master private key
- -p,--public <arg>    Miner's public key
+ -v,--values <arg>    if Action is NEW, specify the list of beneficiaries addresses. If Action is VOT, specify the CC tx Hash.
  -v,--version         Print the version information and exit
 
 ```
@@ -26,38 +26,34 @@ usage: IoP-Blockchain-Tool [-a <arg>] [-d] [-h] [-n <arg>] [-P <arg>] [-p
 Mandatory arguments are:
 
 * -Action
- *ADD*:  adds a public key into the miner white list.
-  *REM*:  removes a public key from the miner white list.
+ *NEW*:  Creates a new Contribution Contract with a Block start of 10 and block end of 10. And a fixed reward of 80000 satoshis.
+ *VOTYES*:  generates a positive Voting transaction for the specified CC tx hash
+ *VOTYES*:  generates a negative Voting transaction for the specified CC tx hash
   
   * -Private: the **master private key** allowed to execute this transactions.
   
-  * -public: the miner public key to add into the white list.
   
 Default network is Mainnet. To switch, use the -network parameter. Example:
 
 ```
-iop-blockchain-tool.jar -a add -P validPrivateKey -p validPublicKey -n Test
+iop-cc-tool.jar -a add -P validPrivateKey -a NEW -v pTtMh5xvPn8Dxyy5tqFze1MPASvNLxU52E 
 ```
 
 ## Program description
 
-The goal is to generate and broadcast a valid transaction on the IoP blockchain including the passed **Action** and **public key** into an *OP_RETURN* output for the IoP core client to process it.
+Generates and broadcast Contribution Contract related transactions.
 
-The supplied **private key** is used to sign the transaction. The IoP core client detects transactions from this particular private key and based on the action specified, it will add or remove the public key from the client's white list database.
-
-When the Miner white list control is activated in the *IoP blockchain* only blocks which include coinbase transactions signed from any of the public keys on the miner white list will be allowed to incorporate into the blockchain.
 
 Example of an execution output:
 
 ```
-iop-blockchain-tool.jar -a add -P ValidPublicKey -p 029443aea9b102504bc093a0b2a0b8afbf0eda4a55baf1123ca4e948a0669dff62 -n regtest
+iop-cc-tool.jar -a add -P validPrivateKey -a NEW -v pTtMh5xvPn8Dxyy5tqFze1MPASvNLxU52E 
 ```
 
 ```
 Connecting to IoP regtest network...
 Connected to peer [127.0.0.1]:14877
-Action: ADD
-Public key: 029443aea9b102504bc093a0b2a0b8afbf0ed
+Action: BEW
 
 Press ENTER if you want to broadcast the transaction. Press Ctrl+C to cancel.
 
